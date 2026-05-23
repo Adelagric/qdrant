@@ -557,6 +557,13 @@ fn finish_optimization(
             .try_for_each(|chunk| read_segment_holder.deduplicate_points(chunk, hw_counter))?;
     }
 
+    // Durably flush before dropping the source segments' data below. The optimization moves
+    // points (merge/dedup/CoW) without recording flush dependencies, so a segment's
+    // `persistent_version` can advance past data that isn't on disk yet; the WAL-ack
+    // (`get_max_persisted_version`) trusts that and can truncate past those ops, losing points on
+    // reload once the sources are gone. A durable flush here makes persisted state match reality.
+    read_segment_holder.flush_all(true, true)?;
+
     drop(read_segment_holder);
     // Allow updates again
     drop(update_guard);
