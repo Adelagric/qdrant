@@ -145,9 +145,7 @@ where
                 // Best-effort: release page cache populated for the
                 // derived structures we just dropped.
                 if let Err(err) = mmap.clear_cache() {
-                    log::warn!(
-                        "Failed to clear mmap cache during numeric swap to on-disk: {err}",
-                    );
+                    log::warn!("Failed to clear mmap cache during numeric swap to on-disk: {err}",);
                 }
                 (NumericIndexInner::Mmap(mmap), Ok(true))
             }
